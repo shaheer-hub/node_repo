@@ -1,0 +1,276 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System;
+using System.Text;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.IE;
+using System.Threading;
+
+
+/* 
+ * 
+ * Notes
+ * This has been tested on July 4th, 2019 against (OFFICE system)
+ * FIREFOX 60.7.2esr (64-bit)
+ * CHROME Version 75 (64-bit)
+ * IE Version 11
+ * 
+ * Note that in the lab we must use an older version of ChromeDriver at present.  
+ * 
+ * C. Mark Yendt (July 2019)
+ */
+
+namespace A6Start
+{
+    [TestClass]
+    public class KatalonAutomationExample
+    {
+        private static IWebDriver driver;
+        private StringBuilder verificationErrors;
+        private bool acceptNextAlert = true;
+        // private const string BROWSER = "FIREFOX";
+        private const string BROWSER = "CHROME";
+        //private const string BROWSER = "IE";
+
+        private const string DRIVER_LOCATION = @"D:\Drivers\";
+        private const string FIREFOX_BIN_LOCATION = @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe";
+        string city1 = "Brampton"; string city2 = ""; string city3 = ""; string city4 = "";
+
+        [ClassInitialize]
+        public static void InitializeClass(TestContext testContext)
+        {
+            // FIREFOX
+            if (BROWSER == "FIREFOX")
+            {
+                FirefoxDriverService service = FirefoxDriverService.CreateDefaultService(DRIVER_LOCATION);
+                // Note that the line below needs to be the full exe Name not just the path
+                service.FirefoxBinaryPath = FIREFOX_BIN_LOCATION;
+                driver = new FirefoxDriver(service);   // WORKS 
+            }
+            else if (BROWSER == "CHROME")
+            {
+
+                // Note that the line below needs to be the full exe Name not just the path
+                ChromeOptions options = new ChromeOptions {  };
+                driver = new ChromeDriver(DRIVER_LOCATION);  // WORKS ! 
+            }
+                
+            else if (BROWSER == "IE")
+            {
+                // Internet EXPLORER (NOTE : Must add DRIVER_LOCATION to Path
+                InternetExplorerOptions options = new InternetExplorerOptions { IgnoreZoomLevel = true };
+                driver = new InternetExplorerDriver(options);  // WORKS !
+            }
+                
+
+        }
+
+        [ClassCleanup]
+        public static void CleanupClass()
+        {
+            try
+            {
+                //driver.Quit();// quit does not close the window
+                Thread.Sleep(4000);
+                driver.Close();
+                driver.Dispose();
+            }
+            catch (Exception)
+            {
+                // Ignore errors if unable to close the browser
+            }
+        }
+
+        [TestInitialize]
+        public void InitializeTest()
+        {
+            verificationErrors = new StringBuilder();
+        }
+
+        [TestCleanup]
+        public void CleanupTest()
+        {
+            Assert.AreEqual("", verificationErrors.ToString());
+        }
+
+        [TestMethod]
+        public void RunAllTests()
+        {
+
+            // Put your test cases in order here
+
+            TestLoginAdmin();
+            TestCreate();
+            TestDelete();
+            TestCityDirectory(city1);
+            //TestCityDirectory(city2);
+            //TestCityDirectory(city3);
+            //TestCityDirectory(city4);
+
+        }
+        //adding user
+        public void TestCreate()
+        {
+            driver.Navigate().GoToUrl("https://csunix.mohawkcollege.ca/tooltime/comp10066/A3/login.php");
+            driver.FindElement(By.Id("username")).Click();
+            driver.FindElement(By.Id("username")).Clear();
+            driver.FindElement(By.Id("username")).SendKeys("admin");
+            driver.FindElement(By.Name("password")).Clear();
+            driver.FindElement(By.Name("password")).SendKeys("adminP6ss");
+            driver.FindElement(By.Name("Submit")).Click();
+            driver.FindElement(By.Id("loginname")).Click();
+            try
+            {
+                Assert.AreEqual("User: admin", driver.FindElement(By.Id("loginname")).Text);
+            }
+            catch (Exception e)
+            {
+                verificationErrors.Append(e.Message);
+            }
+            try
+            {
+                Assert.AreEqual("User Admin", driver.FindElement(By.LinkText("User Admin")).Text);
+            }
+            catch (Exception e)
+            {
+                verificationErrors.Append(e.Message);
+            }
+            driver.FindElement(By.LinkText("User Admin")).Click();
+            driver.FindElement(By.Id("username")).Click();
+            driver.FindElement(By.Id("username")).Clear();
+            driver.FindElement(By.Id("username")).SendKeys("harrypotter01");
+            driver.FindElement(By.Name("password")).Clear();
+            driver.FindElement(By.Name("password")).SendKeys("Harrypotter1");
+            driver.FindElement(By.XPath("//input[@name='activate' and @value='Y']")).Click();//find by xpath
+            driver.FindElement(By.XPath("//input[@name='admin' and @value='N']")).Click();
+            driver.FindElement(By.Id("email")).Click();
+            driver.FindElement(By.Id("email")).Clear();
+            driver.FindElement(By.Id("email")).SendKeys("harrypotter01@mohawk.com");
+            driver.FindElement(By.Name("Add New Member")).Click();
+          
+            
+
+            //driver.FindElement(By.Id("loginname")).Click();
+            //try
+            //{
+            //    Assert.AreEqual("Not Logged In", driver.FindElement(By.Id("loginname")).Text);
+            //}
+            //catch (Exception e)
+            //{
+            //    verificationErrors.Append(e.Message);
+            //}
+        }
+        //the delete method
+        public void TestDelete()
+        {
+            //using xpath query of selenium
+            driver.FindElement(By.XPath("//*[@id='harrypotter01']/a[1]")).Click();
+            driver.FindElement(By.XPath("//*[@id='body']/div[1]/p[1]/a")).Click();
+        }
+        public void TestCityDirectory(string city1)
+        {
+            driver.FindElement(By.XPath("//*[@id='body']/div[2]/ul[2]/li[2]/a")).Click();
+            driver.FindElement(By.Id("city")).Click();
+            driver.FindElement(By.XPath(String.Format("//*[@id='city']/option[14]"))).Click();
+        }
+        //public void TestCityDirectory(city2)
+        //{
+
+        //}
+        // public void TestCityDirectory(city3)
+        //        {
+
+        //        }
+        // public voidTestCityDirectory(city4)
+        //        {
+
+        //        }
+        public void TestLoginAdmin()
+        {
+            driver.Navigate().GoToUrl("https://csunix.mohawkcollege.ca/tooltime/comp10066/A3/login.php");
+            driver.FindElement(By.Id("username")).Click();
+            driver.FindElement(By.Id("username")).Clear();
+            driver.FindElement(By.Id("username")).SendKeys("admin");
+            driver.FindElement(By.Name("password")).Clear();
+            driver.FindElement(By.Name("password")).SendKeys("adminP6ss");
+            driver.FindElement(By.Name("Submit")).Click();
+            driver.FindElement(By.Id("loginname")).Click();
+            try
+            {
+                Assert.AreEqual("User: admin", driver.FindElement(By.Id("loginname")).Text);
+            }
+            catch (Exception e)
+            {
+                verificationErrors.Append(e.Message);
+            }
+            try
+            {
+                Assert.AreEqual("User Admin", driver.FindElement(By.LinkText("User Admin")).Text);
+            }
+            catch (Exception e)
+            {
+                verificationErrors.Append(e.Message);
+            }
+            driver.FindElement(By.LinkText("Logout")).Click();
+            driver.FindElement(By.Id("loginname")).Click();
+            try
+            {
+                Assert.AreEqual("Not Logged In", driver.FindElement(By.Id("loginname")).Text);
+            }
+            catch (Exception e)
+            {
+                verificationErrors.Append(e.Message);
+            }
+        }
+        private bool IsElementPresent(By by)
+        {
+            try
+            {
+                driver.FindElement(by);
+                return true;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        }
+
+        private bool IsAlertPresent()
+        {
+            try
+            {
+                driver.SwitchTo().Alert();
+                return true;
+            }
+            catch (NoAlertPresentException)
+            {
+                return false;
+            }
+        }
+
+        private string CloseAlertAndGetItsText()
+        {
+            try
+            {
+                IAlert alert = driver.SwitchTo().Alert();
+                string alertText = alert.Text;
+                if (acceptNextAlert)
+                {
+                    alert.Accept();
+                }
+                else
+                {
+                    alert.Dismiss();
+                }
+                return alertText;
+            }
+            finally
+            {
+                acceptNextAlert = true;
+            }
+        }
+    }
+}
+
